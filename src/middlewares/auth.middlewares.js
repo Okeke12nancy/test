@@ -1,7 +1,6 @@
-import logger from "../../helpers/logger.js";
-import handleResponse from "../../helpers/response.js";
-import { tokenVerifier } from "../../helpers/jwt.js";
-import { User } from "../../database/index.js";
+import { tokenVerifier } from "../helpers/jwt.helpers.js";
+import logger from "../helpers/logger.helpers.js";
+import handleResponse from "../helpers/response.helpers.js";
 
 export const auth = async (req, res, next) => {
   try {

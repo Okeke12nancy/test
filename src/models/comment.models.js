@@ -4,34 +4,35 @@ import aggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const commentSchema = new mongoose.Schema(
   {
-    posts: {
+    post: {
       type: mongoose.Types.ObjectId,
       ref: "Posts",
     },
 
-    comments: {
+    body: {
       type: String,
       default: "",
     },
+
     file: {
-      type: String,
-      default: "",
+      id: {
+        type: String,
+        default: "",
+      },
     },
+
     user: {
       type: mongoose.Types.ObjectId,
-      ref: "User",
+      ref: "Users",
     },
 
     deleted: {
       type: Boolean,
       default: false,
-      select: false,
     },
 
     deletedAt: {
-      type: timestamps,
-      default: false,
-      select: false,
+      type: Date,
     },
   },
   { timestamps: true }
@@ -45,8 +46,8 @@ commentSchema.set("toJSON", {
   },
 });
 
-userSchema.plugin(paginate);
-userSchema.plugin(aggregatePaginate);
+// userSchema.plugin(paginate);
+// userSchema.plugin(aggregatePaginate);
 
 const Comment = mongoose.model("Comments", commentSchema);
 

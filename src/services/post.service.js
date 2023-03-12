@@ -1,4 +1,4 @@
-import { Post } from "../models/post.models";
+import Post from "../models/post.models.js";
 
 class postService {
   constructor() {}
@@ -37,15 +37,11 @@ class postService {
     const posts = await Post.find(filter).populate([
       {
         path: "createdBy",
-        select: ["firstName", "lastName", "email", "role"],
+        select: ["firstName", "lastName", "email"],
       },
       {
-        path: "commentedBy",
-        select: ["userName"],
-      },
-      {
-        path: "comment",
-        select: ["userName"],
+        path: "comments",
+        select: ["body", "createdAt", "user"],
       },
     ]);
 
@@ -53,12 +49,12 @@ class postService {
   }
 
   async update(id, updateData = {}) {
-    const Post = await Post.findOneAndUpdate({ _id: id }, updateData, {
+    const post = await Post.findOneAndUpdate({ _id: id }, updateData, {
       new: true,
       runValidators: true,
     });
 
-    return task;
+    return post;
   }
   async delete(id) {
     const post = await Task.findByIdAndUpdate(id);
@@ -66,4 +62,4 @@ class postService {
   }
 }
 
-module.exports = new postService();
+export default new postService();

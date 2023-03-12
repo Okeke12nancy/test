@@ -1,17 +1,15 @@
-const express = require("express");
-
-import { PostController } from "../controllers/post.contollers";
-import { isAuthorized } from "../middlewares/authorize.middleware";
-
+import express from "express";
 const postRouter = express.Router();
+import commentController from "../controllers/comment.controllers.js";
 
-const isAuthorized = new isAuthorized();
-const postController = new PostController();
+import postController from "../controllers/post.controllers.js";
+import { isAuthorized } from "../middlewares/authorize.middleware.js";
 
-postRouter.post("/post", postItController.create);
-postRouter.get("posts", postItController.findAll);
-postRouter.get("/posts/:id", postItController.findById);
-postRouter.put("/posts/:id", postItController.update);
-postRouter.delete("/posts/:id", postItController.delete);
+postRouter.post("/", isAuthorized, uploadFiles, postController.createPost);
+postRouter.get("/", postController.findAllPosts);
+postRouter.get("/all/by-author", isAuthorized, postController.findAuthorPosts);
+postRouter.get("/:postId", postController.findOnePost);
+postRouter.patch("/:postId", postController.updateOnePost);
+postRouter.delete("/:postId", postController.deleteOnePost);
 
-module.exports = postRouter;
+export default postRouter;

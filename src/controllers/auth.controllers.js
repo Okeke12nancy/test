@@ -1,78 +1,198 @@
-import logger from "../helpers/logger.helpers";
-import handleResponse from "../helpers/response.helpers";
+import handleResponse from "../helpers/response.helpers.js";
 
-import User from "../models/user.models";
-import { verifyEmail, passwordChange } from "../services/email.services";
-import { hash, verifyHash, deleteFields } from "../helpers/index2.helpers";
-import { addMinutes } from "../helpers/date";
-import { generateJwtToken } from "../helpers/jwt.helpers";
-import { userService } from "../services/user.service";
+import { verifyEmail, passwordChange } from "../services/email.services.js";
+import { hash, verifyHash } from "../helpers/index2.helpers.js";
+import { generateJwtToken, tokenVerifier } from "../helpers/jwt.helpers.js";
+import UserService from "../services/user.service.js";
+import { generateRandomAvatar } from "./../middlewares/avatar.middlewares.js";
+import moment from "moment";
+import logger from "../helpers/logger.helpers.js";
 
-export class AuthController {
-  constructor() {
-    this.logger = logger;
-    this.handleResponse = handleResponse;
-    this.User = userService;
+class AuthController {
+  // Register a User
+  async register(req, res) {
+    try {
+      const { email, password } = req.body;
+      logger.info(`${email} --- ${password}`);
+
+      const passwordHash = await hash(password);
+      const avatar = await generateRandomAvatar(email);
+
+      const createData = {
+        ...req.body,
+        password: passwordHash,
+        avatar,
+      };
+
+      const user = await UserService.create(createData);
+
+      // generate token
+      const token = await generateJwtToken({
+        userId: user?._id,
+        tokenExpiry: moment(Date.now()).add(15, "minutes"),
+      });
+
+      const { firstName, lastName } = user;
+
+      // firstName, lastName, userEmail, token
+      const link = `${process.env.BASE_URL}/api/v1/auth/verify/?token=${token}`;
+      await verifyEmail(firstName, lastName, email, link);
+
+      return handleResponse(
+        201,
+        "user registered successfully. check email to verify token",
+        user,
+        res
+      );
+    } catch (e) {
+      console.log(e);
+      logger.error(e);
+      return handleResponse(500, e, {}, res);
+    }
   }
 
-  async login({ data }) {
+  // Log In User
+  async login(req, res) {
     logger.debug("Logging in user");
     try {
-      const user = await this.User.findOne(
+      const { email, password } = req.body;
+
+      const user = await UserService.findOne(
         {
-          email: data.email,
+          email,
         },
         "+password"
       );
 
       if (!user) {
-        return this.handleResponse(400, "invalid email or password");
+        return handleResponse(400, "invalid email or password", {}, res);
       }
 
-      const passwordMatch = await verifyHash(user.password, data.password);
+      const passwordMatch = await verifyHash(user.password, password);
 
       if (!passwordMatch) {
-        return this.handleResponse(400, "invalid email or password");
+        return handleResponse(400, "invalid email or password");
+      }
+
+      if (!user.verified) {
+        return handleResponse(400, "please verify your email", {}, res);
       }
 
       // generate token
-      const token = await generateJwtToken({ ...user["_doc"] });
+      const token = await generateJwtToken({
+        userId: user?._id,
+        email: user.email,
+        verified: user.verified,
+      });
 
-      // delete hidden fields
-      deleteFields(user["_doc"], this.User.getHiddenFields());
-      await verifyEmail(body);
-      return this.handleResponse(200, "login successful", { user, token });
+      return handleResponse(200, "login successful", { user, token }, res);
     } catch (e) {
-      this.logger.error(e);
-      return this.handleResponse(500, e);
+      logger.error(e);
+      return handleResponse(500, e, {}, res);
     }
   }
 
-  async changePassword({ user, data }) {
-    this.logger.debug("Changing user password");
+  // Already logged in user.
+  async changePassword(req, res) {
+    logger.debug("Changing user password");
     try {
+      const { password, newPassword, confirmNewPassword } = req.body;
+
+      if (newPassword !== confirmNewPassword) {
+        return handleResponse(400, "Password mismatch", {}, res);
+      }
+
+      const user = req.user;
+
       // check if old password is correct
-      const isCorrect = await verifyHash(user.password, data.password);
+      const isCorrect = await verifyHash(user?.password, password);
 
       if (!isCorrect) {
-        return this.handleResponse(400, "incorrect password");
+        return handleResponse(400, "incorrect password", {}, res);
       }
 
       // hash new password
-      data.new_password = await hash(data.new_password);
+      const newPasswordHash = await hash(newPassword);
 
       // update user password
-      await this.User.findOneAndUpdate(
+      await UserService.update(
         { _id: user._id },
-        { password: data.new_password }
+        { password: newPasswordHash }
       );
-      await passwordChange(body);
-      return this.handleResponse(200, "password changed successfully");
+
+      await passwordChange(user?.email);
+      return handleResponse(200, "password changed successfully", {}, res);
     } catch (e) {
-      this.logger.error(e);
-      return this.handleResponse(500, e);
+      logger.error(e);
+      console.log(e);
+      return handleResponse(500, e, {}, res);
+    }
+  }
+
+  // Verify Email Token
+  async verifyUserEmail(req, res) {
+    try {
+      const { token } = req.query;
+
+      const {
+        data: { userId, tokenExpiry },
+      } = await tokenVerifier(token);
+
+      if (moment(Date.now()) > moment(tokenExpiry)) {
+        return handleResponse(400, "Verification token expired", {}, res);
+      }
+
+      await UserService.update(userId, {
+        verified: true,
+        verifiedAt: moment(Date.now()).format(),
+      });
+
+      return handleResponse(200, "Email verified successfully", {}, res);
+    } catch (e) {
+      logger.error(e);
+      return handleResponse(500, e, {}, res);
+    }
+  }
+
+  // Resent verify email Token
+  async resendVerifyUserEmail(req, res) {
+    try {
+      const { email } = req.body;
+
+      const user = await UserService.findOne({ email });
+
+      if (!user)
+        return handleResponse(
+          200,
+          "Email verification resent successfully",
+          {},
+          res
+        );
+
+      // generate token
+      const token = await generateJwtToken({
+        userId: user?._id,
+        tokenExpiry: moment(Date.now()).add(15, "minutes"),
+      });
+
+      const { firstName, lastName } = user;
+
+      // firstName, lastName, userEmail, token
+
+      const link = `${process.env.BASE_URL}/api/v1/auth/verify/?token=${token}`;
+      await verifyEmail(firstName, lastName, email, link);
+
+      return handleResponse(
+        200,
+        "Email verification resent successfully",
+        {},
+        res
+      );
+    } catch (e) {
+      logger.error(e);
+      return handleResponse(500, e, {}, res);
     }
   }
 }
 
-export default new authControllers();
+export default new AuthController();

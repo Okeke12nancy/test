@@ -1,21 +1,31 @@
-const express = require("express");
-const router = express.Router();
-import { AuthController } from "../controllers/auth.controllers";
-import { auth } from "../middlewares/auth.middlewares";
+import express from "express";
+const authRouter = express.Router();
 
-import { isAuthorized } from "../middlewares/authorize.middleware";
+import authController from "../controllers/auth.controllers.js";
 
-const isAuthorized = new isAuthorized();
-const authController = new AuthController();
-const authMiddleware = new AuthMiddleware();
+import { auth } from "../middlewares/auth.middlewares.js";
+import { isAuthorized } from "../middlewares/authorize.middleware.js";
+import { AuthValidator } from "../validations/auth.validations";
+const authValidator = new AuthValidator();
 
-// Create a new account
-router.post("/signUp", authController.signUp);
+// // Create a new account
+// authRouter.post("/register", auth, authController.register);
 
 // Sign in to account
-router.post("/signIn", authController.signIn);
+authRouter.post("/login", authValidator.login(), authController.login);
+
+// Verify Email
+authRouter.get("/verify", authController.verifyUserEmail);
+
+// Resend Verification Email
+authRouter.post("/resend", authController.resendVerifyUserEmail);
 
 // Reset password , change uour password
-router.post(authController.enterNewPassword);
+authRouter.post(
+  "/change-password",
 
-module.exports = router;
+  isAuthorized,
+  authController.changePassword
+);
+
+export default authRouter;

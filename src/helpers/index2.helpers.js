@@ -1,4 +1,3 @@
-import CryptoJS from "crypto-js";
 import bcrypt from "bcryptjs";
 import pkg from "mongoose";
 import { addMinutes } from "./date.js";
@@ -22,6 +21,7 @@ export async function get_current_timestamp(day = 0) {
 
   return dayjs(date, "YYYY-MM-DD HH:mm:ss.SSS").toDate();
 }
+
 export const generateToken = async (length = 6, minutes = 5) => {
   if (length <= 0) {
     length = 6;

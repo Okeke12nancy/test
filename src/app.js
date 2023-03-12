@@ -1,8 +1,7 @@
 import express from "express";
 import cors from "cors";
-import routes from "./api/index.js";
-import config from "./config/index.js";
 import methodOverride from "method-override";
+import appRoutes from "./routes/app.routes.js";
 
 export default ({ app }) => {
   /**
@@ -10,14 +9,11 @@ export default ({ app }) => {
    * @TODO Explain why they are here
    */
   app.get("/", (req, res) => {
-    res.json({ message: "node js boiler plate", error: false });
+    res.json({ message: "Post-IT API Ready to go", error: false });
   });
 
-  app.get("/status", (req, res) => {
-    res.status(200).end();
-  });
-  app.head("/status", (req, res) => {
-    res.status(200).end();
+  app.get("/health-check", (req, res) => {
+    return res.status(200).json({ message: "All good here 😁" });
   });
 
   // Useful if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc.)
@@ -37,23 +33,23 @@ export default ({ app }) => {
   // Transforms the raw string of req.body into json
   app.use(express.json());
 
-  // Load API routes
-  app.use(config.api.prefix, routes());
-
   // API Documentation
-  app.use(
-    OpticMiddleware({
-      enabled: process.env.NODE_ENV !== "production",
-    })
-  );
+  // app.use(
+  //   OpticMiddleware({
+  //     enabled: process.env.NODE_ENV !== "production",
+  //   })
+  // );
+
+  appRoutes(app);
 
   /// catch 404 and forward to error handler
-  app.use((req, res, next) => {
+  app.use("*", (req, res, next) => {
     const err = new Error("Not Found");
     err["status"] = 404;
     res.status(404).json({
       message: "Not Found",
       error: true,
     });
+    next();
   });
 };

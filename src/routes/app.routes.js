@@ -1,10 +1,13 @@
-const userRouter = require("../routes/user.route");
-const commentRouter = require("../routes/user.route");
-const postRouter = require("../routes/user.route");
+import authRouter from "./auth.routes.js";
+import userRouter from "./user.routes.js";
+import commentRouter from "./comment.routes.js";
+import postRouter from "./post.routes.js";
+
 const basePath = "/api/v1";
 
-module.exports = (app) => {
+export default (app) => {
+  app.use(`${basePath}/auth`, authRouter);
   app.use(`${basePath}/users`, userRouter);
-  app.use(`${basePath}/posts`, commentRouter);
-  app.use(`${basePath}/comments`, postRouter);
+  app.use(`${basePath}/posts`, postRouter);
+  app.use(`${basePath}/comments`, commentRouter);
 };

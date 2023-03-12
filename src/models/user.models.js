@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
-import paginate from "mongoose-paginate-v2";
-import aggregatePaginate from "mongoose-aggregate-paginate-v2";
-import { generateRandomAvatar } from "../middlewares/avatar.middlewares";
+// import paginate from "mongoose-paginate-v2";
+// import aggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const userSchema = new mongoose.Schema(
   {
@@ -16,15 +15,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please tell us your last name!"],
     },
+
     //USER NAME
     userName: {
       type: String,
       required: [true, "Please tell us your username"],
     },
+
     avatar: {
       type: String,
-      default: avatarUrl,
+      default: "",
     },
+
     //EMAIL ADDRESS
     email: {
       type: String,
@@ -36,6 +38,7 @@ const userSchema = new mongoose.Schema(
     // PHONE NUMBER
     phoneNumber: {
       type: String,
+      required: true,
       unique: true,
     },
 
@@ -46,6 +49,7 @@ const userSchema = new mongoose.Schema(
       minlength: 8,
       select: false,
     },
+
     // USER GENDER
     gender: {
       type: String,
@@ -69,18 +73,19 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
 
-    posts: {
-      type: mongoose.Types.ObjectId,
-      ref: "Posts",
-    },
-    comments: {
-      type: mongoose.Types.ObjectId,
-      ref: "Posts",
-    },
     //USER PASSWORD CHANGED AT
     passwordChangedAt: {
       type: Date,
       select: false,
+    },
+
+    verified: {
+      type: Boolean,
+      default: false,
+    },
+
+    verifiedAt: {
+      type: Date,
     },
 
     deleted: {
@@ -90,9 +95,7 @@ const userSchema = new mongoose.Schema(
     },
 
     deletedAt: {
-      type: timestamps,
-      default: false,
-      select: false,
+      type: Date,
     },
   },
   {
@@ -108,8 +111,8 @@ userSchema.set("toJSON", {
   },
 });
 
-userSchema.plugin(paginate);
-userSchema.plugin(aggregatePaginate);
+// userSchema.plugin(paginate);
+// userSchema.plugin(aggregatePaginate);
 
 const User = mongoose.model("Users", userSchema);
 

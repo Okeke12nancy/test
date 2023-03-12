@@ -1,4 +1,4 @@
-const { User } = require("../models/user.model");
+import User from "../models/user.models.js";
 
 class UserService {
   async create(newUser) {
@@ -7,8 +7,13 @@ class UserService {
     return newUserData;
   }
 
-  async findOne(filter) {
-    const user = await User.findOne(filter);
+  async findOne(filter, select = "") {
+    let user;
+    if (select.length > 0) {
+      user = await User.findOne(filter).select(select);
+    } else {
+      user = await User.findOne(filter);
+    }
 
     return user;
   }
@@ -40,4 +45,4 @@ class UserService {
   }
 }
 
-module.exports = new userService();
+export default new UserService();

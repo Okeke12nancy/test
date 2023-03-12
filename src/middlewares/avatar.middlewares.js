@@ -1,4 +1,3 @@
-// @_learnable
 const avatarStyles = [
   "adventurer",
   "adventurer-neutral",
@@ -29,6 +28,8 @@ const avatarStyles = [
 
 const getRandomAvatarStyle = () => {
   // Your code here
+  const random = Math.floor(Math.random() * avatarStyles.length);
+  return avatarStyles[random];
 };
 
 export const generateRandomAvatar = async (email) => {
@@ -59,4 +60,3 @@ export const generateRandomAvatar = async (email) => {
 
   return avatarUrl;
 };
-// @_learnable

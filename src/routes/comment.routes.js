@@ -1,14 +1,19 @@
-const express = require("express");
-import { CommentController } from "../controllers/comment.contollers";
-import { isAuthorized } from "../middlewares/authorize.middleware";
+import express from "express";
+const commentRouter = express.Router();
 
-const isAuthorized = new isAuthorized();
-const authController = new AuthController();
+import { uploadFiles } from "../utils/index.utils";
+import { isAuthorized } from "../middlewares/authorize.middleware.js";
+import commentController from "../controllers/comment.controllers.js";
 
-commentRouter.post("/post", commentController.create);
-commentRouter.get("posts", commentController.findAll);
-commentRouter.get("/posts/:id", commentController.findById);
-commentRouter.put("/posts/:id", commentController.update);
-commentRouter.delete("/posts/:id", commentController.delete);
+commentRouter.post(
+  "/",
+  isAuthorized,
+  uploadFiles,
+  commentController.createComment
+);
+// commentRouter.get("/", commentController.findAll);
+// commentRouter.get("/:id", commentController.findById);
+// commentRouter.put("/:id", commentController.update);
+// commentRouter.delete("/:id", commentController.delete);
 
-module.exports = commentRouter;
+export default commentRouter;

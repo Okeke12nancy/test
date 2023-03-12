@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
-import { databaseURL } from "../config/index.js";
+import config from "../config/index.js";
 
 mongoose.set("strictQuery", false);
 
 export const connectDB = async () => {
   await mongoose
-    .connect(databaseURL, {})
+    .connect(config.databaseURL, {})
     .then(() => {
       console.log("DB connection successful!");
     })

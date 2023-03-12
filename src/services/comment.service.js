@@ -1,60 +1,44 @@
-import { Post } from "../models/post.models";
-
-class postService {
+import Comment from "./../models/comment.models.js";
+class CommentService {
   constructor() {}
 
-  async createPost(newPost) {
-    const newPostData = await Post.create(newPost);
-
-    return newPostData;
+  async createOne(payload) {
+    const newComment = await Comment.create(payload);
+    return newComment;
   }
 
   async findOne(filter) {
-    const post = await Post.findOne(filter);
-
-    return post;
+    const comment = await Comment.findOne(filter);
+    return comment;
   }
 
   async findById(id) {
-    const post = await Post.findById(id).populate([
-      {
-        path: "posts",
-        select: ["title", "body"],
-      },
-      {
-        path: "user",
-        select: ["userName"],
-      },
-    ]);
-    return post;
+    const comment = await Comment.findById(id);
+    return comment;
   }
 
   async findAll(filter = {}) {
-    const posts = await Post.find(filter).populate([
-      {
-        path: "posts",
-        select: ["title", "body"],
-      },
-      {
-        path: "user",
-        select: ["userName"],
-      },
-    ]);
-    return post;
+    const comments = await Comment.find(filter);
+    return comments;
   }
 
-  async update(id, updateData = {}) {
-    const Post = await Post.findOneAndUpdate({ _id: id }, updateData, {
-      new: true,
-      runValidators: true,
-    });
+  async updateOne(id, updateData = {}) {
+    const updatedComment = await Comment.findOneAndUpdate(
+      { _id: id },
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
-    return task;
+    return updatedComment;
   }
-  async delete(id) {
-    const post = await Task.findByIdAndUpdate(id);
-    return post;
+
+  async deleteOne(id) {
+    const comment = await Comment.findByIdAndRemove(id);
+    return comment;
   }
 }
 
-module.exports = new postService();
+export default new CommentService();
